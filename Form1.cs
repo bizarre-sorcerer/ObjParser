@@ -50,7 +50,7 @@ namespace WindowsFormsTest
             // Сбрасываем модельно-видовую матрицу
             gl.LoadIdentity();
             // Сдвигаем перо влево от центра и вглубь экрана
-            gl.Translate(-2f, 0.0f, -5.0f);
+            gl.Translate(-2.5f, 0.0f, -10.0f);
             // Вращаем пирамиду вокруг ее оси Y
             gl.Rotate(rtri, 0.0f, 1.0f, 0.0f);
             // Рисуем треугольники - грани пирйамиды
@@ -58,13 +58,15 @@ namespace WindowsFormsTest
 
             drawTriangle();
 
+            gl.GetError();
+
             gl.End();
 
             // Куб /////////////////////////////
             // Сбрасываем модельно-видовую матрицу
             gl.LoadIdentity();
             // Сдвигаем перо с право от центра и вглубь экрана
-            gl.Translate(2f, 0.0f, -5.0f);
+            gl.Translate(2.5f, 0.0f, -10.0f);
             // Вращаем куб вокруг ее оси Y
             gl.Rotate(rtri, 0.0f, 1.5, 0.0f);
             // Рисуем грани куба
@@ -72,12 +74,17 @@ namespace WindowsFormsTest
 
             drawCube();
 
+            gl.GetError();
+
             gl.End();
-            
+
             // Контроль полной отрисовки следующего изображения
             gl.Flush();
+
             // Меняем угол поворота 
-            rtri -= 3.0f;
+            rtri -= 10.0f;
+
+            label1.Text = rtri.ToString();
         }
 
         // Рисует триугольник
@@ -156,6 +163,11 @@ namespace WindowsFormsTest
         }
 
         private void openGLControl1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
         {
 
         }
