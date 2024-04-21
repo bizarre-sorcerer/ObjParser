@@ -19,8 +19,13 @@ namespace WindowsFormsTest
         
         public Form1()
         {
+        
             InitializeComponent();
-            
+
+            // Subscribe to the KeyDown event
+            KeyPreview = true;
+            this.KeyDown += MainForm_KeyDown;
+
             // Создаем экземпляр
             gl = new OpenGL();
         }
@@ -84,7 +89,7 @@ namespace WindowsFormsTest
             // Меняем угол поворота 
             rtri -= 10.0f;
 
-            label1.Text = rtri.ToString();
+            // label1.Text = rtri.ToString();
         }
 
         // Рисует триугольник
@@ -171,5 +176,51 @@ namespace WindowsFormsTest
         {
 
         }
+
+        // При нажатии на клавишу, показывает какая клавиша была нажата. Не работает для клавиш со стрелками
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            label1.Text =  e.KeyCode.ToString();
+        }
+
+        // При нажатии на клавиши со стрелками
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.Left)
+            {
+                label1.Text = "Left arrow key pressed";
+                return true;
+            }
+            else if (keyData == Keys.Right)
+            {
+                label1.Text = "Rigt arrow key pressed";
+                return true;
+            }
+            else if (keyData == Keys.Up)
+            {
+                label1.Text = "Up arrow key pressed";
+                return true;
+            }
+            else if (keyData == Keys.Down)
+            {
+                label1.Text = "Down arrow key pressed";
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+            //switch (e.KeyCode)
+            //{
+            //    case Keys.Up:
+            //        label1.Text = "Up arrow key pressed";
+            //    case Keys.Down:
+            //        label1.Text = "Down arrow key pressed";
+            //    case Keys.Left:
+            //        label1.Text = "Left arrow key pressed";
+            //    case Keys.Right:
+            //        label1.Text = "Right arrow key pressed";
+            //        e.IsInputKey = true;
+            //        break;
+            //}
     }
 }
