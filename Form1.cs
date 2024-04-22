@@ -24,12 +24,10 @@ namespace WindowsFormsTest
 
             // Subscribe to the KeyDown event
             KeyPreview = true;
-            this.KeyDown += MainForm_KeyDown;
 
             // Создаем экземпляр
             gl = new OpenGL();
         }
-
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -41,10 +39,9 @@ namespace WindowsFormsTest
 
         }
 
-        // <summary>
-        // Угол поворота пирамиды
-        // </summary>
+        /// Угол поворота пирамиды
         float rtri = 0;
+        string direction = "right";
 
         private void openGLControl1_OpenGLDraw(object sender, SharpGL.RenderEventArgs args)
         {
@@ -63,8 +60,6 @@ namespace WindowsFormsTest
 
             drawTriangle();
 
-            gl.GetError();
-
             gl.End();
 
             // Куб /////////////////////////////
@@ -79,17 +74,20 @@ namespace WindowsFormsTest
 
             drawCube();
 
-            gl.GetError();
-
             gl.End();
 
             // Контроль полной отрисовки следующего изображения
             gl.Flush();
 
-            // Меняем угол поворота 
-            rtri -= 10.0f;
-
-            // label1.Text = rtri.ToString();
+            // Меняем в какую сторону крутиться обЪект, меняя угол поворота 
+            if (direction == "right")
+            {
+                rtri += 10.0f;
+            } 
+            else if (direction == "left")
+            {
+                rtri -= 10.0f;
+            }
         }
 
         // Рисует триугольник
@@ -126,6 +124,7 @@ namespace WindowsFormsTest
 
         }
 
+        // Рисует куб
         private void drawCube()
         {
             // Top
@@ -167,20 +166,16 @@ namespace WindowsFormsTest
 
         }
 
+        // То что происходит при инициализации glControl 
         private void openGLControl1_Load(object sender, EventArgs e)
         {
 
         }
 
+        // При нажатии на текст в окошке
         private void label1_Click(object sender, EventArgs e)
         {
 
-        }
-
-        // При нажатии на клавишу, показывает какая клавиша была нажата. Не работает для клавиш со стрелками
-        private void MainForm_KeyDown(object sender, KeyEventArgs e)
-        {
-            label1.Text =  e.KeyCode.ToString();
         }
 
         // При нажатии на клавиши со стрелками
@@ -189,11 +184,13 @@ namespace WindowsFormsTest
             if (keyData == Keys.Left)
             {
                 label1.Text = "Left arrow key pressed";
+                direction = "left";
                 return true;
             }
             else if (keyData == Keys.Right)
             {
                 label1.Text = "Rigt arrow key pressed";
+                direction = "right";
                 return true;
             }
             else if (keyData == Keys.Up)
@@ -209,18 +206,5 @@ namespace WindowsFormsTest
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
-            //switch (e.KeyCode)
-            //{
-            //    case Keys.Up:
-            //        label1.Text = "Up arrow key pressed";
-            //    case Keys.Down:
-            //        label1.Text = "Down arrow key pressed";
-            //    case Keys.Left:
-            //        label1.Text = "Left arrow key pressed";
-            //    case Keys.Right:
-            //        label1.Text = "Right arrow key pressed";
-            //        e.IsInputKey = true;
-            //        break;
-            //}
     }
 }
