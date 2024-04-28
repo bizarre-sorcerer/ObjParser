@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -43,6 +44,9 @@ namespace WindowsFormsTest
         float rtri = 0;
         string direction = "right";
 
+        // Путь к файлу
+        string filePath = "../../sword/sword.obj";
+
         private void openGLControl1_OpenGLDraw(object sender, SharpGL.RenderEventArgs args)
         {
             // Очистка экрана и буфера глубин
@@ -76,6 +80,21 @@ namespace WindowsFormsTest
 
             //gl.End();
 
+            // Оbj файл /////////////////////////////
+            // Сбрасываем модельно-видовую матрицу
+            gl.LoadIdentity();
+            // Сдвигаем перо влево от центра и вглубь экрана
+            gl.Translate(-2.5f, 0.0f, -10.0f);
+            // Вращаем пирамиду вокруг ее оси Y
+            gl.Rotate(rtri, 0.0f, 1.0f, 0.0f);
+            // Рисуем треугольники - грани пирйамиды
+            gl.Begin(OpenGL.GL_TRIANGLES);
+
+
+            drawObj(filePath);
+
+            gl.End();
+
             // Контроль полной отрисовки следующего изображения
             gl.Flush();
 
@@ -88,6 +107,19 @@ namespace WindowsFormsTest
             {
                 rtri -= 10.0f;
             }
+        }
+
+        // Рисует obj файл
+        private void drawObj(string filePath)
+        {
+            // Парсит
+            ObjParser.Parse(filePath);
+
+            foreach (string line in ObjParser.vertexes)
+            {
+                Console.WriteLine(line);
+            }
+            Console.ReadLine();
         }
 
         // Рисует триугольник
@@ -108,20 +140,19 @@ namespace WindowsFormsTest
             gl.Color(0.0f, 0.0f, 1.0f);
             gl.Vertex(1.0f, -1.0f, 1.0f);
             // Back
-            //gl.Color(1.0f, 0.0f, 0.0f);
-            //gl.Vertex(0.0f, 1.0f, 0.0f);
-            //gl.Color(0.0f, 1.0f, 0.0f);
-            //gl.Vertex(1.0f, -1.0f, -1.0f);
-            //gl.Color(0.0f, 0.0f, 1.0f);
-            //gl.Vertex(-1.0f, -1.0f, -1.0f);
+            gl.Color(1.0f, 0.0f, 0.0f);
+            gl.Vertex(0.0f, 1.0f, 0.0f);
+            gl.Color(0.0f, 1.0f, 0.0f);
+            gl.Vertex(1.0f, -1.0f, -1.0f);
+            gl.Color(0.0f, 0.0f, 1.0f);
+            gl.Vertex(-1.0f, -1.0f, -1.0f);
             // Left
-            //gl.Color(1.0f, 0.0f, 0.0f);
-            //gl.vertex(0.0f, 1.0f, 0.0f);
-            //gl.color(0.0f, 1.0f, 0.0f);
-            //gl.vertex(-1.0f, -1.0f, 1.0f);
-            //gl.color(0.0f, 0.0f, 1.0f);
-            //gl.vertex(-1.0f, -1.0f, -1.0f);
-
+            gl.Color(1.0f, 0.0f, 0.0f);
+            gl.Vertex(0.0f, 1.0f, 0.0f);
+            gl.Color(0.0f, 1.0f, 0.0f);
+            gl.Vertex(-1.0f, -1.0f, 1.0f);
+            gl.Color(0.0f, 0.0f, 1.0f);
+            gl.Vertex(-1.0f, -1.0f, -1.0f);
         }
 
         // Рисует куб
@@ -281,10 +312,6 @@ namespace WindowsFormsTest
 
             // Запихиваем из по спискам
             SortLines(lines);
-
-            // TODO
-            // Огранизует в тип данных который понятен для движков 3д рендеринга. Лица со своими настоящими значениями, а не индексы
-            ReplaceFaceValues();
         }
     }
 
