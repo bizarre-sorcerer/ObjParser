@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using System.Globalization;
 using SharpGL;
 
 
@@ -90,7 +91,6 @@ namespace WindowsFormsTest
             // Рисуем треугольники - грани пирйамиды
             gl.Begin(OpenGL.GL_TRIANGLES);
 
-
             drawObj(filePath);
 
             gl.End();
@@ -110,16 +110,10 @@ namespace WindowsFormsTest
         }
 
         // Рисует obj файл
-        private void drawObj(string filePath)
+        private void drawObj(string filepath)
         {
-            // Парсит
-            ObjParser.Parse(filePath);
-
-            foreach (string line in ObjParser.vertexes)
-            {
-                Console.WriteLine(line);
-            }
-            Console.ReadLine();
+            // парсит
+            ObjParser.Parse(filepath);   
         }
 
         // Рисует триугольник
@@ -245,13 +239,13 @@ namespace WindowsFormsTest
     class ObjParser
     {
         // Координаты всех вершин треугольников
-        public static List<string> vertexes = new List<string>();
+        public static List<List<float>> vertexes = new List<List<float>>();
 
         // Координаты текстур
-        public static List<string> textures = new List<string>();
+        public static List<List<float>> textures = new List<List<float>>();
 
         // Нормали
-        public static List<string> normals = new List<string>();
+        public static List<List<float>> normals = new List<List<float>>();
 
         // Лица треугольников
         public static List<string> faces = new List<string>();
@@ -266,10 +260,31 @@ namespace WindowsFormsTest
         }
 
         // Возвращает новую строку без токена в начале линии. То есть остается только значение
-        public static string RemoveToken(string line)
+        private static string RemoveToken(string line)
         {
+            // Массив всех 'слов' линии разделенный пробелом 
             string[] words = line.Split();
-            string result = string.Join(" ", words.Skip(1));
+
+            // Удаляем токен(f, vn etc), то есть первый элемент массива
+            string tokenlessValues = string.Join(" ", words.Skip(1));
+
+            return tokenlessValues;
+        }
+
+        // Делает из линии список, где значения это координаты вершины по x, y, z
+        private static List<float> modifyLine(string line)
+        {
+            // Массив всех значений линии, разделенные пробелом 
+            string[] values = line.Split();
+
+            // Список координат вершин где будут 3 элемента: x, y, z
+            List<float> result = new List<float>();
+
+            foreach (string value in values)
+            {
+                // Добавляет в список каждую из координат в типе данных float
+                result.Add(float.Parse(value.Trim(), CultureInfo.InvariantCulture));
+            }
 
             return result;
         }
@@ -283,17 +298,17 @@ namespace WindowsFormsTest
                 // Вершина 
                 if (line[0] == 'v' && line[1] == ' ')
                 {
-                    vertexes.Add(RemoveToken(line));
+                    vertexes.Add(modifyLine(RemoveToken(line)));
                 }
                 // Текстура
                 else if (line[0] == 'v' && line[1] == 't')
                 {
-                    textures.Add(RemoveToken(line));
+                    vertexes.Add(modifyLine(RemoveToken(line)));
                 }
                 // Нормаль
                 else if (line[0] == 'v' && line[1] == 'n')
                 {
-                    normals.Add(RemoveToken(line));
+                    vertexes.Add(modifyLine(RemoveToken(line)));
                 }
                 // Лицо
                 else if (line[0] == 'f')
