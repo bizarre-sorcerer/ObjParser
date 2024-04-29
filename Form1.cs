@@ -38,7 +38,7 @@ namespace WindowsFormsTest
         }
 
         /// Угол поворота 
-        float rtri = 5;
+        float rtri = 15;
 
         // Путь к файлу
         string filePath = "../../sword/sword.obj";
@@ -74,10 +74,10 @@ namespace WindowsFormsTest
             gl.LoadIdentity();
 
             // Сдвигаем перо влево от центра и вглубь экрана
-            gl.Translate(0.0f, 0.0f, -13.5f);
+            gl.Translate(0.0f, 0.0f, -25.0);
 
             // Вращаем куб вокруг ее оси Y
-            gl.Rotate(rtri, 20.0f, 0.0, 0.0f);
+            gl.Rotate(100.0f, 20.0f, 0.0, 0.0f);
             
             // Рисуем четырехугольники - грани 3д объекта
             gl.Begin(OpenGL.GL_QUADS);
