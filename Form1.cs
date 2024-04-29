@@ -37,8 +37,8 @@ namespace WindowsFormsTest
 
         }
 
-        /// Угол поворота пирамиды
-        float rtri = 0;
+        /// Угол поворота 
+        float rtri = 5;
 
         // Путь к файлу
         string filePath = "../../sword/sword.obj";
@@ -57,27 +57,30 @@ namespace WindowsFormsTest
 
             // Куб /////////////////////////////
             // Сбрасываем модельно-видовую матрицу
-            gl.LoadIdentity();
-            // Сдвигаем перо с право от центра и вглубь экрана
-            gl.Translate(2.5f, 0.0f, -10.0f);
-            // Вращаем куб вокруг ее оси Y
-            gl.Rotate(rtri, 0.0f, 1.5, 0.0f);
-            // Рисуем грани куба
-            gl.Begin(OpenGL.GL_QUADS);
+            //gl.LoadIdentity();
+            //// Сдвигаем перо с право от центра и вглубь экрана
+            //gl.Translate(2.5f, 0.0f, -10.0f);
+            //// Вращаем куб вокруг ее оси Y
+            //gl.Rotate(rtri, 0.0f, 1.5, 0.0f);
+            //// Рисуем грани куба
+            //gl.Begin(OpenGL.GL_QUADS);
 
-            drawCube();
+            //drawCube();
 
-            gl.End();
+            //gl.End();
 
             // Оbj файл /////////////////////////////
             // Сбрасываем модельно-видовую матрицу
             gl.LoadIdentity();
+
             // Сдвигаем перо влево от центра и вглубь экрана
-            gl.Translate(-2.5f, 0.0f, -10.0f);
-            // Вращаем пирамиду вокруг ее оси Y
-            gl.Rotate(rtri, 0.0f, 1.0f, 0.0f);
-            // Рисуем треугольники - грани пирйамиды
-            gl.Begin(OpenGL.GL_TRIANGLES);
+            gl.Translate(0.0f, 0.0f, -13.5f);
+
+            // Вращаем куб вокруг ее оси Y
+            gl.Rotate(rtri, 20.0f, 0.0, 0.0f);
+            
+            // Рисуем четырехугольники - грани 3д объекта
+            gl.Begin(OpenGL.GL_QUADS);
 
             drawObj(filePath);
 
@@ -90,14 +93,20 @@ namespace WindowsFormsTest
         // Рисует obj файл
         private void drawObj(string filepath)
         {
-            string face = "1//1 246//1 332//1 117//1";
+            // Парсит
+            ObjParser.Parse(filepath);
 
-            // парсит
-            ObjParser.Parse(filepath);  
+            gl.Color(1.0f, 1.0f, 1.0f);
 
-            foreach (string point in face.Split(" "))
+            foreach (List<List<int>> face in ObjParser.faces)
             {
-                
+                foreach (List<int> point in face)
+                {
+                    int vertexIndex = point[0]-1;
+                    List<float> vertex = ObjParser.vertexes[vertexIndex];
+
+                    gl.Vertex(vertex[0], vertex[1], vertex[2]);
+                }
             }
         }
 
@@ -150,6 +159,9 @@ namespace WindowsFormsTest
         }
     }
 
+    // Класс парсер
+    // В метод Parse(filePath) дается путь к .obj файлу. Он его парсит и извлекает линии в отдельные списки в зависимости от токена в начале линии(v/vt/vn/f)
+    // Списки не возвращаются, а храняться статически как свойства класса
     class ObjParser
     {
         // Координаты всех вершин треугольников
@@ -181,8 +193,7 @@ namespace WindowsFormsTest
         //            []
         //        ]
         // ]
-
-        public static List<List<List<float>>> faces = new List<List<List<float>>>();
+        public static List<List<List<int>>> faces = new List<List<List<int>>>();
 
         // Возвращает список где каждая линия файла это элемент списка
         private static string[] GetAllText(string filePath)
@@ -247,18 +258,18 @@ namespace WindowsFormsTest
                 // Лицо
                 else if (line[0] == 'f')
                 {
-                    string faceString = RemoveToken(line);
-                    List<List<float>> currentFace = new List<List<float>>();
+                    string faceString = RemoveToken(line);  // Пример: "1//1 246//1 332//1 117//1"
+                    List<List<int>> currentFace = new List<List<int>>();
 
-                    // "1//1 246//1 332//1 117//1"
-                    foreach (string item in faceString.Split(" ")) // [["1//1"], ["246//1"], ["332//1"], ["117//1"]]
+                    foreach (string item in faceString.Split(' ')) // [["1//1"], ["246//1"], ["332//1"], ["117//1"]]
                     {
-                        string[] valuesStrings = item.Split("//"); // ["1", "1"] и т.д
-                        List<float> point = new List<float>();  // [1, 1]
+                        //string[] valuesStrings = item.Split("//"); // ["1", "1"] и т.д
+                        string[] valuesStrings = item.Replace("//", "\0").Split('\0');
+                        List<int> point = new List<int>();  // [1, 1]
 
                         foreach (string value in valuesStrings)
                         {
-                            point.Add(float.Parse(value));
+                            point.Add(int.Parse(value));
                         }
                         currentFace.Add(point);
                     }
