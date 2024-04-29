@@ -87,12 +87,18 @@ namespace WindowsFormsTest
             gl.Flush();
         }
 
-
         // Рисует obj файл
         private void drawObj(string filepath)
         {
+            string face = "1//1 246//1 332//1 117//1";
+
             // парсит
-            ObjParser.Parse(filepath);   
+            ObjParser.Parse(filepath);  
+
+            foreach (string point in face.Split(" "))
+            {
+                
+            }
         }
 
         // Рисует куб
@@ -144,12 +150,9 @@ namespace WindowsFormsTest
         }
     }
 
-    // Класс парсер
-    // В метод Parse(filePath) дается путь к .obj файлу. Он его парсит и извлекает линии в отдельные списки в зависимости от токена в начале линии(v/vt/vn/f)
-    // Списки не возвращаются, а храняться статически как свойства класса
     class ObjParser
     {
-        // Координаты всех вершин треугольников. Каждый элемент это отдельный список, где элементы это координаты по x, y, z
+        // Координаты всех вершин треугольников
         public static List<List<float>> vertexes = new List<List<float>>();
 
         // Координаты текстур
@@ -159,7 +162,27 @@ namespace WindowsFormsTest
         public static List<List<float>> normals = new List<List<float>>();
 
         // Лица треугольников
-        public static List<string> faces = new List<string>();
+        // faces = [
+        //      // Первое лицо
+        //      [
+        //            [553, 970],  // Первая точка. Элементы этого списка вершина и нормаль(v, vn)
+        //            [],  // Вторая точка
+        //            []   // Третья точка
+        //      ],
+        // Второе лицо
+        //      [
+        //            [],
+        //            [],
+        //            []
+        //        ],
+        //      [
+        //            [],
+        //            [],
+        //            []
+        //        ]
+        // ]
+
+        public static List<List<List<float>>> faces = new List<List<List<float>>>();
 
         // Возвращает список где каждая линия файла это элемент списка
         private static string[] GetAllText(string filePath)
@@ -224,7 +247,22 @@ namespace WindowsFormsTest
                 // Лицо
                 else if (line[0] == 'f')
                 {
-                    faces.Add(RemoveToken(line));
+                    string faceString = RemoveToken(line);
+                    List<List<float>> currentFace = new List<List<float>>();
+
+                    // "1//1 246//1 332//1 117//1"
+                    foreach (string item in faceString.Split(" ")) // [["1//1"], ["246//1"], ["332//1"], ["117//1"]]
+                    {
+                        string[] valuesStrings = item.Split("//"); // ["1", "1"] и т.д
+                        List<float> point = new List<float>();  // [1, 1]
+
+                        foreach (string value in valuesStrings)
+                        {
+                            point.Add(float.Parse(value));
+                        }
+                        currentFace.Add(point);
+                    }
+                    faces.Add(currentFace);
                 }
             }
         }
@@ -240,5 +278,4 @@ namespace WindowsFormsTest
             SortLines(lines);
         }
     }
-
 }
