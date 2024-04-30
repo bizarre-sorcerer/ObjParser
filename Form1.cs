@@ -77,7 +77,7 @@ namespace WindowsFormsTest
             gl.Translate(0.0f, 0.0f, -25.0);
 
             // Вращаем куб вокруг ее оси Y
-            gl.Rotate(100.0f, 20.0f, 0.0, 0.0f);
+            gl.Rotate(100.0f, -15.0f, -20.0f, 0.0f);
             
             // Рисуем четырехугольники - грани 3д объекта
             gl.Begin(OpenGL.GL_QUADS);
