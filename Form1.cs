@@ -195,15 +195,6 @@ namespace WindowsFormsTest
         // ]
         public static List<List<List<int>>> faces = new List<List<List<int>>>();
 
-        // Возвращает список где каждая линия файла это элемент списка
-        private static string[] GetAllText(string filePath)
-        {
-            // Каждая строка файла отдельный элемент в массиве
-            string[] linesArray = File.ReadAllLines(filePath);
-
-            return linesArray;
-        }
-
         // Возвращает новую строку без токена в начале линии. То есть остается только значение
         private static string RemoveToken(string line)
         {
@@ -305,7 +296,7 @@ namespace WindowsFormsTest
         public static void Parse(string filePath)
         {
             // Получаем список со всеми линиями текста
-            string[] lines = GetAllText(filePath);
+            string[] lines = File.ReadAllLines(filePath);
 
             // Запихиваем из по спискам
             SortLines(lines);
