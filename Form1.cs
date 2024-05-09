@@ -41,7 +41,8 @@ namespace WindowsFormsTest
         float rtri = 60;
 
         // Путь к файлу
-        string filePath = "../../sword/sword.obj";
+        //string filePath = "../../3D_models/sword/sword.obj";
+        string filePath = "../../3D_models/robot/Rmk3.obj";
 
         // Много раз в секунду вызывается эта функция
         private void openGLControl1_OpenGLDraw(object sender, SharpGL.RenderEventArgs args)
@@ -74,7 +75,7 @@ namespace WindowsFormsTest
             gl.LoadIdentity();
 
             // Сдвигаем перо влево от центра и вглубь экрана
-            gl.Translate(0.0f, 0.0f, -25.0);
+            gl.Translate(0.0f, 0.0f, -45.0);
 
             // Вращаем куб вокруг ее оси Y
             gl.Rotate(rtri, -15.0f, -20.0f, 0.0f);
@@ -164,7 +165,7 @@ namespace WindowsFormsTest
     // Списки не возвращаются, а храняться статически как свойства класса
     class ObjParser
     {
-        // Координаты всех вершин треугольников
+        // Координаты всех вершин треугольников. Каждый элемент это одна вершина и список, где хранятся значения координат по x, y, z
         public static List<List<float>> vertexes = new List<List<float>>();
 
         // Координаты текстур
@@ -195,8 +196,8 @@ namespace WindowsFormsTest
         // ]
         public static List<List<List<int>>> faces = new List<List<List<int>>>();
 
-        // Возвращает новую строку без токена в начале линии. То есть остается только значение
-        private static string RemoveToken(string line)
+        // Делает из линии список, где значения это координаты вершины по x, y, z
+        private static List<float> ModifyLine(string line)
         {
             // Массив всех 'слов' линии разделенный пробелом 
             string[] words = line.Split();
@@ -204,14 +205,8 @@ namespace WindowsFormsTest
             // Удаляем токен(f, vn etc), то есть первый элемент массива
             string tokenlessValues = string.Join(" ", words.Skip(1));
 
-            return tokenlessValues;
-        }
-
-        // Делает из линии список, где значения это координаты вершины по x, y, z
-        private static List<float> modifyLine(string line)
-        {
             // Массив всех значений линии, разделенные пробелом 
-            string[] values = line.Split();
+            string[] values = tokenlessValues.Split();
 
             // Список координат вершин где будут 3 элемента: x, y, z
             List<float> result = new List<float>();
@@ -226,39 +221,63 @@ namespace WindowsFormsTest
         }
 
         // Парсит именно лицы, проебразует строку в вид более удобный для использования
-        private static void parseFace(string line)
+        public static void ParseFace(string line)
         {
-            // Строка лица, без токена f
-            string faceString = RemoveToken(line);  // Пример: "1//1 246//1 332//1 117//1"
+            // Массив всех 'слов' линии разделенный пробелом 
+            string[] words = line.Split();
+
+            // Удаляем токен(f, vn etc), то есть первый элемент массива. Строка без токена
+            string tokenlessString = string.Join(" ", words.Skip(1));    // Пример: "1//1 246//1 332//1 117//1"
 
             // Список, где каждый элемент это одна точка. Каждая из точек тоже список, где элементы это v, vt и vn
             List<List<int>> currentFace = new List<List<int>>();
 
-            // Значение по которому строка делиться
-            string splitValue;
+            // Виды строк: 
+            // string face = "f 343435 343436 343434";
+            // string face = "f 1006//725 560//725 567//725 1018//725";
+            // string face = "f 23/2 32/34 35/34";
+            // string face "f 1006/454/725 560/345/725 567/345/725 1018/345/725"
 
-            // Если в лице нет текстуры(3//2) то делит по "//", в другому случае по "/"
-            foreach (string item in faceString.Split(' ')) // [["1//1"], ["246//1"], ["332//1"], ["117//1"]]
+            foreach (string point in tokenlessString.Split(' '))
             {
-                if (item.Count(c => c == '/') == 2)
+                // Пропускает пустую сабстроку
+                if (string.IsNullOrWhiteSpace(point))
                 {
-                    splitValue = "//";
-                }
-                else
-                {
-                    splitValue = "/";
+                    continue;
                 }
 
-                //string[] valuesStrings = item.Split("//"); // ["1", "1"] и т.д
-                string[] valuesStrings = item.Replace(splitValue, "\0").Split('\0');
-                List<int> point = new List<int>();  // [1, 1]
+                int delimetersCount = point.Count(c => c == '/');
 
-                foreach (string value in valuesStrings)
+                // Если у поллигона только вертексы есть
+                if (delimetersCount == 0)
                 {
-                    point.Add(int.Parse(value));
+                    currentFace.Add(new List<int> { int.Parse(point) });
                 }
-                currentFace.Add(point);
+                // Если у поллигона есть все или все кроме нормали
+                else if (delimetersCount == 1)
+                {
+                    List<int> pointValues = new List<int>();
+
+                    foreach (string value in point.Split('/'))
+                    {
+                        pointValues.Add(int.Parse(value));
+                    }
+                    currentFace.Add(pointValues);
+                }
+                // У полигона нет текстуры
+                else if (delimetersCount == 2)
+                {
+                    List<int> pointValues = new List<int>();
+
+                    foreach (string value in point.Split(new string[] { "//" }, StringSplitOptions.None))
+                    {
+                        pointValues.Add(int.Parse(value));
+                    }
+                    currentFace.Add(pointValues);
+                }
+
             }
+
             faces.Add(currentFace);
         }
 
@@ -269,24 +288,24 @@ namespace WindowsFormsTest
             foreach (string line in lines)
             {
                 // Вершина 
-                if (line[0] == 'v' && line[1] == ' ')
+                if (line.StartsWith("v "))
                 {
-                    vertexes.Add(modifyLine(RemoveToken(line)));
+                    vertexes.Add(ModifyLine(line));
                 }
                 // Текстура
-                else if (line[0] == 'v' && line[1] == 't')
+                else if (line.StartsWith("vt"))
                 {
-                    vertexes.Add(modifyLine(RemoveToken(line)));
+                    textures.Add(ModifyLine(line));
                 }
                 // Нормаль
-                else if (line[0] == 'v' && line[1] == 'n')
+                else if (line.StartsWith("vn"))
                 {
-                    vertexes.Add(modifyLine(RemoveToken(line)));
+                    normals.Add(ModifyLine(line));
                 }
                 // Лицо
-                else if (line[0] == 'f')
+                else if (line.StartsWith("f "))
                 {
-                    parseFace(line);
+                    ParseFace(line);
                 }
             }
         }
