@@ -41,8 +41,8 @@ namespace WindowsFormsTest
         float rtri = 60;
 
         // Путь к файлу
-        //string filePath = "../../3D_models/sword/sword.obj";
-        string filePath = "../../3D_models/robot/Rmk3.obj";
+        string filePath = "../../3D_models/sword/sword.obj";
+        //string filePath = "../../3D_models/robot/Rmk3.obj";
 
         // Много раз в секунду вызывается эта функция
         private void openGLControl1_OpenGLDraw(object sender, SharpGL.RenderEventArgs args)
@@ -56,33 +56,17 @@ namespace WindowsFormsTest
             // Очистка экрана и буфера глубин
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 
-            // Куб /////////////////////////////
-            // Сбрасываем модельно-видовую матрицу
-            //gl.LoadIdentity();
-            //// Сдвигаем перо с право от центра и вглубь экрана
-            //gl.Translate(2.5f, 0.0f, -10.0f);
-            //// Вращаем куб вокруг ее оси Y
-            //gl.Rotate(rtri, 0.0f, 1.5, 0.0f);
-            //// Рисуем грани куба
-            //gl.Begin(OpenGL.GL_QUADS);
-
-            //drawCube();
-
-            //gl.End();
-
             // Оbj файл /////////////////////////////
             // Сбрасываем модельно-видовую матрицу
             gl.LoadIdentity();
 
             // Сдвигаем перо влево от центра и вглубь экрана
-            gl.Translate(0.0f, 0.0f, -45.0);
+            gl.Translate(0.0f, 0.0f, -25.0);
 
             // Вращаем куб вокруг ее оси Y
-            gl.Rotate(rtri, -15.0f, -20.0f, 0.0f);
-            
-            // Рисуем четырехугольники - грани 3д объекта
-            gl.Begin(OpenGL.GL_QUADS);
+            gl.Rotate(rtri, -15.0f, 0.0f, 0.0f);
 
+            // Рисуем четырехугольники - грани 3д объекта
             drawObj(filePath);
 
             gl.End();
@@ -95,16 +79,26 @@ namespace WindowsFormsTest
         private void drawObj(string filepath)
         {
             // Парсит
-            ObjParser.Parse(filepath);
+            ObjectParser.Parse(filepath);
+
+            int verticeCount = ObjectParser.groups[0].faces[0].Count;
+
+            if (verticeCount == 3)
+            {
+                gl.Begin(OpenGL.GL_TRIANGLES);
+            } 
+            else if (verticeCount == 4){
+                gl.Begin(OpenGL.GL_QUADS);
+            }
 
             gl.Color(1.0f, 1.0f, 1.0f);
 
-            foreach (List<List<int>> face in ObjParser.faces)
+            foreach (List<List<int>> face in ObjectParser.groups[0].faces)
             {
                 foreach (List<int> point in face)
                 {
-                    int vertexIndex = point[0]-1;
-                    List<float> vertex = ObjParser.vertexes[vertexIndex];
+                    int vertexIndex = point[0] - 1;
+                    List<float> vertex = ObjectParser.allVertexes[vertexIndex];
 
                     gl.Vertex(vertex[0], vertex[1], vertex[2]);
                 }
@@ -160,11 +154,51 @@ namespace WindowsFormsTest
         }
     }
 
+    class ObjectGroup
+    {
+        // Координаты всех вершин треугольников. Каждый элемент это одна вершина и список, где хранятся значения координат по x, y, z
+        public List<List<float>> vertexes;
+
+        // Координаты текстур
+        public List<List<float>> textures;
+
+        // Нормали
+        public List<List<float>> normals;
+
+        //////////////
+        // Лица треугольников
+        // faces = [
+        //      // Первое лицо
+        //      [
+        //            [553, 970],  // Первая точка. Элементы этого списка вершина и нормаль(v, vn)
+        //            [],  // Вторая точка
+        //            []   // Третья точка
+        //      ]
+        //////////////
+        public List<List<List<int>>> faces = new List<List<List<int>>>();
+
+        public ObjectGroup(List<List<float>> vertexes, List<List<float>> textures, List<List<float>> normals, List<List<List<int>>> faces)
+        {
+            this.vertexes = vertexes;
+            this.textures = textures;
+            this.normals = normals;
+            this.faces = faces;
+        }
+    }
+
     // Класс парсер
     // В метод Parse(filePath) дается путь к .obj файлу. Он его парсит и извлекает линии в отдельные списки в зависимости от токена в начале линии(v/vt/vn/f)
     // Списки не возвращаются, а храняться статически как свойства класса
-    class ObjParser
+    class ObjectParser
     {
+        // Список всех групп
+        public static List<ObjectGroup> groups = new List<ObjectGroup>();
+
+
+
+        /////////////////
+        ////////// Данные текущей группы (g). Когда парситься вся группа, с этими данными создается объект класса ObjectGroup и списки очищаються для след группы ////////
+        ////////////////
         // Координаты всех вершин треугольников. Каждый элемент это одна вершина и список, где хранятся значения координат по x, y, z
         public static List<List<float>> vertexes = new List<List<float>>();
 
@@ -181,20 +215,26 @@ namespace WindowsFormsTest
         //            [553, 970],  // Первая точка. Элементы этого списка вершина и нормаль(v, vn)
         //            [],  // Вторая точка
         //            []   // Третья точка
-        //      ],
-        // Второе лицо
-        //      [
-        //            [],
-        //            [],
-        //            []
-        //        ],
-        //      [
-        //            [],
-        //            [],
-        //            []
-        //        ]
-        // ]
+        //      ]
         public static List<List<List<int>>> faces = new List<List<List<int>>>();
+
+
+
+        /////////////
+        /////////// Глобальные данные на весь файл. Тут все вертексы, нормали, текстуры и полигоны //////////
+        /////////////
+        public static List<List<float>> allVertexes = new List<List<float>>();
+
+        // Координаты текстур
+        public static List<List<float>> allTextures = new List<List<float>>();
+
+        // Нормали
+        public static List<List<float>> allNormals = new List<List<float>>();
+
+        // Лица
+        public static List<List<List<int>>> allFaces = new List<List<List<int>>>();
+
+
 
         // Делает из линии список, где значения это координаты вершины по x, y, z
         private static List<float> ModifyLine(string line)
@@ -221,7 +261,7 @@ namespace WindowsFormsTest
         }
 
         // Парсит именно лицы, проебразует строку в вид более удобный для использования
-        public static void ParseFace(string line)
+        public static List<List<int>> ParseFace(string line)
         {
             // Массив всех 'слов' линии разделенный пробелом 
             string[] words = line.Split();
@@ -278,34 +318,61 @@ namespace WindowsFormsTest
 
             }
 
-            faces.Add(currentFace);
+            return currentFace;
         }
 
         // Сортирует линии по отдельным спискам. Вершины в одном списке, нормали в одной списке и т.д
         private static void SortLines(string[] lines)
         {
+            int count = 0;
+            int currentLine = 0;
+
             // Проверяeт каждую линию и добавляет ее в соответстующий список в зависимости от токена(v/vt и т.д)
             foreach (string line in lines)
             {
+                currentLine += 1;
+
                 // Вершина 
                 if (line.StartsWith("v "))
                 {
                     vertexes.Add(ModifyLine(line));
+                    allVertexes.Add(ModifyLine(line));
                 }
                 // Текстура
                 else if (line.StartsWith("vt"))
                 {
                     textures.Add(ModifyLine(line));
+                    allTextures.Add(ModifyLine(line));
                 }
                 // Нормаль
                 else if (line.StartsWith("vn"))
                 {
                     normals.Add(ModifyLine(line));
+                    allNormals.Add(ModifyLine(line));
                 }
                 // Лицо
                 else if (line.StartsWith("f "))
                 {
-                    ParseFace(line);
+                    faces.Add(ParseFace(line));
+                    allFaces.Add(ParseFace(line));
+                }
+                else if (line.StartsWith("g "))
+                {
+                    count += 1;
+
+                    ObjectGroup objGroup = new ObjectGroup(vertexes, textures, normals, faces);
+                    groups.Add(objGroup);
+
+                    vertexes.Clear();
+                    textures.Clear();
+                    normals.Clear();
+                    faces.Clear();
+                }
+
+                if (currentLine == lines.Count())
+                {
+                    ObjectGroup objGroup = new ObjectGroup(vertexes, textures, normals, faces);
+                    groups.Add(objGroup);
                 }
             }
         }
@@ -321,4 +388,5 @@ namespace WindowsFormsTest
             SortLines(lines);
         }
     }
+
 }
