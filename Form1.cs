@@ -41,8 +41,8 @@ namespace WindowsFormsTest
         float rtri = 60;
 
         // Путь к файлу
-        string filePath = "../../3D_models/sword/sword.obj";
-        //string filePath = "../../3D_models/robot/Rmk3.obj";
+        //string filePath = "../../3D_models/sword/sword.obj";
+        string filePath = "../../3D_models/robot/Rmk3.obj";
 
         // Много раз в секунду вызывается эта функция
         private void openGLControl1_OpenGLDraw(object sender, SharpGL.RenderEventArgs args)
@@ -53,6 +53,11 @@ namespace WindowsFormsTest
         // То что происходит при инициализации glControl 
         private void openGLControl1_Load(object sender, EventArgs e)
         {
+            robot();
+        }
+
+        private void sword()
+        {
             // Очистка экрана и буфера глубин
             gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 
@@ -61,7 +66,31 @@ namespace WindowsFormsTest
             gl.LoadIdentity();
 
             // Сдвигаем перо влево от центра и вглубь экрана
-            gl.Translate(0.0f, 0.0f, -25.0);
+            gl.Translate(0f, 0f, -15.0);
+
+            // Вращаем куб вокруг ее оси Y
+            gl.Rotate(rtri, 0f, 10f, -10.0f);
+
+            // Рисуем четырехугольники - грани 3д объекта
+            drawObj(filePath);
+
+            gl.End();
+
+            // Контроль полной отрисовки следующего изображения
+            gl.Flush();
+        }
+
+        private void robot()
+        {
+            // Очистка экрана и буфера глубин
+            gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
+
+            // Оbj файл /////////////////////////////
+            // Сбрасываем модельно-видовую матрицу
+            gl.LoadIdentity();
+
+            // Сдвигаем перо влево от центра и вглубь экрана
+            gl.Translate(-0.8f, -0.8f, -1.0);
 
             // Вращаем куб вокруг ее оси Y
             gl.Rotate(rtri, -15.0f, 0.0f, 0.0f);
@@ -80,6 +109,7 @@ namespace WindowsFormsTest
         {
             // Парсит
             ObjectParser.Parse(filepath);
+            NormalizeVertices(ObjectParser.allVertexes);
 
             int verticeCount = ObjectParser.groups[0].faces[0].Count;
 
@@ -93,14 +123,17 @@ namespace WindowsFormsTest
 
             gl.Color(1.0f, 1.0f, 1.0f);
 
-            foreach (List<List<int>> face in ObjectParser.groups[0].faces)
+            foreach (ObjectGroup group in ObjectParser.groups)
             {
-                foreach (List<int> point in face)
+                foreach (List<List<int>> face in group.faces)
                 {
-                    int vertexIndex = point[0] - 1;
-                    List<float> vertex = ObjectParser.allVertexes[vertexIndex];
+                    foreach (List<int> point in face)
+                    {
+                        int vertexIndex = point[0] - 1;
+                        List<float> vertex = ObjectParser.allVertexes[vertexIndex];
 
-                    gl.Vertex(vertex[0], vertex[1], vertex[2]);
+                        gl.Vertex(vertex[0], vertex[1], vertex[2]);
+                    }
                 }
             }
         }
@@ -152,6 +185,47 @@ namespace WindowsFormsTest
         {
 
         }
+
+        private void NormalizeVertices(List<List<float>> vertices)
+        {
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float minZ = float.MaxValue;
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            float maxZ = float.MinValue;
+
+            // Find min and max values along each axis
+            foreach (var vertex in vertices)
+            {
+                float x = vertex[0];
+                float y = vertex[1];
+                float z = vertex[2];
+
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (z < minZ) minZ = z;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+                if (z > maxZ) maxZ = z;
+            }
+
+            // Calculate scale factors for each axis
+            float scaleX = 2.0f / (maxX - minX);
+            float scaleY = 2.0f / (maxY - minY);
+            float scaleZ = 2.0f / (maxZ - minZ);
+            float offsetX = (minX + maxX) / 2.0f;
+            float offsetY = (minY + maxY) / 2.0f;
+            float offsetZ = (minZ + maxZ) / 2.0f;
+
+            // Normalize vertices without altering relative positions
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                vertices[i][0] = (vertices[i][0] - offsetX) * scaleX;
+                vertices[i][1] = (vertices[i][1] - offsetY) * scaleY;
+                vertices[i][2] = (vertices[i][2] - offsetZ) * scaleZ;
+            }
+        }
     }
 
     class ObjectGroup
@@ -193,7 +267,6 @@ namespace WindowsFormsTest
     {
         // Список всех групп
         public static List<ObjectGroup> groups = new List<ObjectGroup>();
-
 
 
         /////////////////
@@ -388,5 +461,4 @@ namespace WindowsFormsTest
             SortLines(lines);
         }
     }
-
 }
